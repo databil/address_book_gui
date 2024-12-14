@@ -1,6 +1,7 @@
 package com.databil.repository;
 
 import com.databil.model.Contact;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
@@ -28,7 +29,7 @@ public class FileRepository {
         ArrayList<Contact> contacts = new ArrayList<>();
        try {
            File file = new File(FILE_PATH);
-           contacts = objectMapper.readValue(file, ArrayList.class);
+           contacts = objectMapper.readValue(file, new TypeReference<ArrayList<Contact>>() {});
            return contacts;
        } catch (Exception e) {
            return contacts;

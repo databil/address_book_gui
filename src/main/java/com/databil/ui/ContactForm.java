@@ -8,23 +8,27 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 
-public class NewContactForm extends GridPane {
+public class ContactForm extends GridPane {
 
     private ContactService contactService;
+    private Contact contact;
 
-    public NewContactForm(ContactService contactService1) {
+    private TextField nameField = new TextField();
+    private TextField surnameField = new TextField();
+    private TextField phoneField = new TextField();
 
-        contactService = contactService1;
+    public ContactForm(Contact contact, ContactService contactService) {
+
+        //TO-DO implement delete
+
+        this.contactService = contactService;
+        this.contact = contact;
         Button saveButton = new Button("Save");
         Button cancelButton = new Button("Cancel");
 
         Label nameLabel = new Label("Name");
         Label surnameLabel = new Label("Surname");
         Label phoneLabel = new Label("Phone");
-
-        TextField nameField = new TextField();
-        TextField surnameField = new TextField();
-        TextField phoneField = new TextField();
 
         add(nameLabel, 0, 0);
         add(nameField, 1, 0);
@@ -39,16 +43,28 @@ public class NewContactForm extends GridPane {
         add(cancelButton, 1, 3);
 
         saveButton.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
-            Contact contact = new Contact();
             contact.setName(nameField.getText());
             contact.setSurname(surnameField.getText());
             contact.setPhone(phoneField.getText());
-            contactService.save(contact);
 
+            Contact oldContact = contactService.findByPhone(contact.getPhone());
+            if (oldContact != null) {
+                System.out.println("Updating existing contact");
+                contactService.update(oldContact);
+            } else {
+                System.out.println("Creating new contact");
+                contactService.save(contact);
+            }
             nameField.clear();
             surnameField.clear();
 
             phoneField.clear();
         });
+    }
+
+    public void setContact(Contact contact) {
+        this.nameField.setText(contact.getName());
+        this.surnameField.setText(contact.getSurname());
+        this.phoneField.setText(contact.getPhone());
     }
 }

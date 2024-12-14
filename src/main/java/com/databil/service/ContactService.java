@@ -10,7 +10,7 @@ import java.util.List;
 public class ContactService {
 
     private final FileRepository fileRepository;
-    List<Contact> contacts;
+    private List<Contact> contacts;
 
     String nameRegex = "^[A-Z][a-zA-Z '.-]*[A-Za-z]$";
     String phoneRegex = "^([+]?\\d{1,3}[-\\s]?|)\\d{3}[-\\s]?\\d{3}[-\\s]?\\d{3}$";
@@ -45,14 +45,7 @@ public class ContactService {
     }
 
     public Contact findByPhone(String phone) {
-
-        for (Contact contact : contacts) {
-            if (contact.getPhone().equals(phone)) {
-                return contact;
-            }
-        }
-
-        return null;
+        return contacts.stream().filter(contact -> contact.getPhone().equals(phone)).findFirst().orElse(null);
     }
 
     public List<Contact> findByPhonePrefix(String phonePrefix) {
@@ -90,4 +83,7 @@ public class ContactService {
         return contacts.size();
     }
 
+    public List<Contact> getContacts() {
+        return contacts;
+    }
 }
