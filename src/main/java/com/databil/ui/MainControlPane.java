@@ -19,7 +19,7 @@ public class MainControlPane extends GridPane {
 
 
 
-    public MainControlPane() {
+    public MainControlPane() throws InterruptedException {
         contactService = new ContactService("/home/mirlan/IdeaProjects/AddressBookGUI/ab.json");
         ContactForm contactPane = new ContactForm(new Contact(), contactService);
 
