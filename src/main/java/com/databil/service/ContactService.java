@@ -15,7 +15,7 @@ public class ContactService {
     String nameRegex = "^[A-Z][a-zA-Z '.-]*[A-Za-z]$";
     String phoneRegex = "^([+]?\\d{1,3}[-\\s]?|)\\d{3}[-\\s]?\\d{3}[-\\s]?\\d{3}$";
 
-    public ContactService(String filePath) {
+    public ContactService(String filePath) throws InterruptedException {
         fileRepository = new FileRepository(filePath);
         this.contacts = fileRepository.readContacts();
     }
