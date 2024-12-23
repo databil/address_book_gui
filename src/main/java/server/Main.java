@@ -3,6 +3,8 @@ package server;
 import com.databil.model.Command;
 import com.databil.model.Contact;
 
+import com.databil.model.Response;
+import com.databil.model.Status;
 import com.databil.service.ContactService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -38,25 +40,37 @@ public class Main {
                 switch (command.command()) {
                     case LIST_COMMAND -> {
                         List<Contact> contactList = contactService.getContacts();
-
-                        objectMapper.writeValue(writer, contactList);
+                        Response response = new Response(Status.OK, contactList);
+                        objectMapper.writeValue(writer, response);
                     }
                     case NEW_COMMAND -> {
                         contactService.save(contact);
                         System.out.println("Contact saved: " + contact);
+                        Response response = new Response(Status.OK, List.of(contact));
+                        objectMapper.writeValue(writer, response);
                     }
                     case DELETE_COMMAND -> {
                         contactService.delete(contact.getPhone());
                         System.out.println("Contact deleted: " + contact);
+                        Response response = new Response(Status.OK, null);
+                        objectMapper.writeValue(writer, response);
                     }
                     case UPDATE_COMMAND -> {
                         contactService.update(contact);
                         System.out.println("Contact updated: " + contact);
+                        Response response = new Response(Status.OK, List.of(contact));
+                        objectMapper.writeValue(writer, response);
                     }
                     case FIND_COMMAND -> {
                        Contact foundContact = contactService.findByPhone(contact.getPhone());
                        System.out.println("Contact found: " + foundContact);
-
+                       Response response;
+                       if (foundContact != null) {
+                           response = new Response(Status.OK, List.of(foundContact));
+                       } else {
+                           response = new Response(Status.OK, null);
+                       }
+                       objectMapper.writeValue(writer, response);
                     }
                     default -> System.out.println("Unknown command");
                 }
