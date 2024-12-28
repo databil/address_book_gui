@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.InputMismatchException;
 import java.util.List;
 
 public class Main {
@@ -44,10 +45,16 @@ public class Main {
                         objectMapper.writeValue(writer, response);
                     }
                     case NEW_COMMAND -> {
-                        contactService.save(contact);
-                        System.out.println("Contact saved: " + contact);
-                        Response response = new Response(Status.OK, List.of(contact));
-                        objectMapper.writeValue(writer, response);
+                        try {
+                            contactService.save(contact);
+                            System.out.println("Contact saved: " + contact);
+                            Response response = new Response(Status.OK, List.of(contact));
+                            objectMapper.writeValue(writer, response);
+                        } catch (InputMismatchException ime) {
+                            Response response = new Response(Status.ERROR, List.of(contact));
+                            objectMapper.writeValue(writer, response);
+                        }
+
                     }
                     case DELETE_COMMAND -> {
                         contactService.delete(contact.getPhone());
@@ -56,10 +63,15 @@ public class Main {
                         objectMapper.writeValue(writer, response);
                     }
                     case UPDATE_COMMAND -> {
-                        contactService.update(contact);
-                        System.out.println("Contact updated: " + contact);
-                        Response response = new Response(Status.OK, List.of(contact));
-                        objectMapper.writeValue(writer, response);
+                        try {
+                            contactService.update(contact);
+                            System.out.println("Contact updated: " + contact);
+                            Response response = new Response(Status.OK, List.of(contact));
+                            objectMapper.writeValue(writer, response);
+                        } catch (InputMismatchException ime) {
+                            Response response = new Response(Status.ERROR, List.of(contact));
+                            objectMapper.writeValue(writer, response);
+                        }
                     }
                     case FIND_COMMAND -> {
                        Contact foundContact = contactService.findByPhone(contact.getPhone());
