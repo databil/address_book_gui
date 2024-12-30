@@ -61,13 +61,13 @@ public class Main {
 
         switch (command.command()) {
             case LIST_COMMAND -> {
-                List<Contact> contactList = contactService.getContacts();
+                List<Contact> contactList = contactService.getContacts(command.userId());
                 Response response = new Response(Status.OK, contactList);
                 objectMapper.writeValue(writer, response);
             }
             case NEW_COMMAND -> {
                 try {
-                    contactService.save(contact);
+                    contactService.save(contact, command.userId());
                     System.out.println("Contact saved: " + contact);
                     Response response = new Response(Status.OK, List.of(contact));
                     objectMapper.writeValue(writer, response);
@@ -78,14 +78,14 @@ public class Main {
 
             }
             case DELETE_COMMAND -> {
-                contactService.delete(contact.getPhone());
+                contactService.delete(contact.getPhone(), command.userId());
                 System.out.println("Contact deleted: " + contact);
                 Response response = new Response(Status.OK, null);
                 objectMapper.writeValue(writer, response);
             }
             case UPDATE_COMMAND -> {
                 try {
-                    contactService.update(contact);
+                    contactService.update(contact, command.userId());
                     System.out.println("Contact updated: " + contact);
                     Response response = new Response(Status.OK, List.of(contact));
                     objectMapper.writeValue(writer, response);
@@ -95,7 +95,7 @@ public class Main {
                 }
             }
             case FIND_COMMAND -> {
-                Contact foundContact = contactService.findByPhone(contact.getPhone());
+                Contact foundContact = contactService.findByPhone(contact.getPhone(), command.userId());
                 System.out.println("Contact found: " + foundContact);
                 Response response;
                 if (foundContact != null) {

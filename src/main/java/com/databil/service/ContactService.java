@@ -6,14 +6,17 @@ import com.databil.repository.FileRepository;
 
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ContactService {
 
     private final FileRepository fileRepository;
-    private List<Contact> contacts;
+    private final List<Contact> contacts;
 
     String nameRegex = "^[A-Z][a-zA-Z '.-]*[A-Za-z]$";
     String phoneRegex = "^([+]?\\d{1,3}[-\\s]?|)\\d{3}[-\\s]?\\d{3}[-\\s]?\\d{3}$";
+
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     public ContactService(String filePath) throws InterruptedException {
         fileRepository = new FileRepository(filePath);
@@ -24,28 +27,50 @@ public class ContactService {
     //delete
     //find
 
-    public void save(Contact contact) throws InputMismatchException {
+    public void save(Contact contact, String userId) throws InputMismatchException {
        validateContact(contact);
-       contacts.add(contact);
-       fileRepository.writeContacts(contacts);
+       lock.writeLock().lock();
+       try {
+           contacts.add(contact);
+           fileRepository.writeContacts(contacts);
+       } finally {
+           lock.writeLock().unlock();
+       }
+
     }
 
-    public void update(Contact newContact) {
+    public void update(Contact newContact, String userId) throws InputMismatchException {
         validateContact(newContact);
-        Contact oldContact = findByPhone(newContact.getPhone());
-        contacts.remove(oldContact);
-        contacts.add(newContact);
-        fileRepository.writeContacts(contacts);
+        lock.writeLock().lock();
+        try {
+            Contact oldContact = findByPhone(newContact.getPhone(), userId);
+            contacts.remove(oldContact);
+            contacts.add(newContact);
+        } finally {
+            lock.writeLock().unlock();
+        }
+
     }
 
-    public void delete(String phone) {
-        Contact contact = findByPhone(phone);
-        contacts.remove(contact);
-        fileRepository.writeContacts(contacts);
+    public void delete(String phone, String userId) throws InputMismatchException {
+        lock.writeLock().lock();
+        try {
+            Contact contact = findByPhone(phone, userId);
+            contacts.remove(contact);
+        } finally {
+            lock.writeLock().unlock();
+        }
+
     }
 
-    public Contact findByPhone(String phone) {
-        return contacts.stream().filter(contact -> contact.getPhone().equals(phone)).findFirst().orElse(null);
+    public Contact findByPhone(String phone, String userId) {
+        lock.readLock().lock();
+        try {
+            return contacts.stream().filter(contact -> contact.getPhone().equals(phone) && contact.getUserId().equals(userId)).findFirst().orElse(null);
+        } finally {
+            lock.readLock().unlock();
+        }
+
     }
 
     public List<Contact> findByPhonePrefix(String phonePrefix) {
@@ -83,7 +108,7 @@ public class ContactService {
         return contacts.size();
     }
 
-    public List<Contact> getContacts() {
-        return contacts;
+    public List<Contact> getContacts(String userId) {
+        return contacts.stream().filter(contact -> contact.getUserId().equals(userId)).toList();
     }
 }
