@@ -1,8 +1,6 @@
 package com.databil.repository;
 
 import com.databil.model.Contact;
-import com.databil.util.FileReaderThread;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
@@ -14,6 +12,7 @@ public class FileRepository {
 
     private final String FILE_PATH;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Object fileLock = new Object(); // Lock for file operations
 
     public FileRepository(String filePath) {
         this.FILE_PATH = filePath;
@@ -27,18 +26,14 @@ public class FileRepository {
       return list of contacts
      */
     public ArrayList<Contact> readContacts() {
-        FileReaderThread fileReaderThread = new FileReaderThread(FILE_PATH);
-        Thread thread = new Thread(fileReaderThread);
-
-        thread.start();
-
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            thread.interrupt();
-            throw new RuntimeException(e);
+        synchronized (fileLock) {
+            try (FileReader reader = new FileReader(FILE_PATH)) {
+               return objectMapper.readValue(reader, objectMapper.getTypeFactory().constructCollectionType(ArrayList.class, Contact.class));
+            } catch (IOException ex){
+                System.out.println(ex.getMessage());
+                return new ArrayList<>();
+            }
         }
-        return fileReaderThread.getContacts();
     }
 
     /*
@@ -47,11 +42,13 @@ public class FileRepository {
     write to the file
      */
     public void writeContacts(List<Contact> contacts) {
-        try {
-           objectMapper.writeValue(new File(FILE_PATH), contacts);
-        }
-        catch (IOException e) {
-            System.out.println(e.getMessage());
+        synchronized (fileLock) {
+            try {
+                objectMapper.writeValue(new File(FILE_PATH), contacts);
+            }
+            catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
         }
     }
 }
